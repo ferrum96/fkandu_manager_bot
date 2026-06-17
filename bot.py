@@ -24,7 +24,7 @@ SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-bot = Bot(token=BOT_TOKEN, session=AiohttpSession(proxy="http://127.0.0.1:12334"))
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 router = Router()
 dp.include_router(router)
