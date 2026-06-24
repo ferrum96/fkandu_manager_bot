@@ -21,6 +21,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @keyframes slideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 .sidebar-open{animation:slideIn .2s ease}
 .overlay{animation:fadeIn .15s ease}
+.touch-ghost{position:fixed;pointer-events:none;z-index:9999;opacity:.85;transform:rotate(3deg) scale(1.05);transition:none}
+.kanban-touch{touch-action:pan-x;user-select:none;-webkit-user-select:none}
 </style>
 <script>tailwind.config={theme:{extend:{colors:{peach:{100:'#ffe8db',400:'#ff8c5a'},rose:{400:'#ff5c8a'}}}}}</script>
 </head>
@@ -88,7 +90,7 @@ function Sidebar(p){
   if(isMobile&&!isOpen)return null;
   return h('div',{className:isMobile?'fixed inset-0 z-50 flex':'fixed left-0 top-0 bottom-0 w-56 z-50 flex flex-col'},
     isMobile?h('div',{className:'overlay absolute inset-0 bg-black/40',onClick:function(){p.onClose()}}):null,
-    h('div',{className:(isMobile?'relative ml-auto w-56 sidebar-open ':'')+'bg-gradient-to-b from-rose-400 to-peach-400 text-white shadow-xl flex flex-col h-full'},
+    h('div',{className:(isMobile?'absolute left-0 top-0 bottom-0 w-56 sidebar-open ':'')+'bg-gradient-to-b from-rose-400 to-peach-400 text-white shadow-xl flex flex-col h-full'},
       h('div',{className:'p-4 border-b border-white/20 flex items-center justify-between'},
         h('div',null,h('h1',{className:'text-lg font-bold'},'🌸 CRM @fkandu'),h('p',{className:'text-xs opacity-80 mt-1'},'Дети и Желания')),
         isMobile?h('button',{onClick:function(){p.onClose()},className:'text-white text-xl'},'✕'):null),
@@ -167,9 +169,15 @@ function KanbanCard(p){
   var uname=l.username&&l.username!=='Нет username'?l.username.replace('@',''):'';
   var hasFiles=(l.product_info||'').indexOf('[')>=0&&(l.product_info||'').indexOf('](')>=0;
   var prod=hasFiles?null:(l.product_info||'').substring(0,40)+((l.product_info||'').length>40?'...':'');
+  function onTS(e){
+    if(window.innerWidth>=768)return;
+    var t=e.touches[0];
+    p.onTouchStart&&p.onTouchStart(l.id,t.clientX,t.clientY,e.currentTarget);
+  }
   return h('div',{draggable:'true',
     onDragStart:function(e){e.dataTransfer.setData('text/plain',String(l.id));e.dataTransfer.effectAllowed='move';setTimeout(function(){e.target.classList.add('dragging')},0)},
     onDragEnd:function(e){e.target.classList.remove('dragging')},
+    onTouchStart:onTS,
     className:'bg-white rounded-lg p-2 md:p-2.5 mb-2 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all card-in',
     style:{borderLeft:'4px solid '+sc(l.lead_score)}},
     h('p',{className:'font-bold text-[11px] md:text-xs text-gray-800'},l.full_name),
@@ -184,14 +192,16 @@ function KanbanColumn(p){
   var status=p.status,leads=p.leads,onDrop=p.onDrop;
   var ov=React.useState(false);
   var isOver=ov[0],setOver=ov[1];
+  var active=isOver||p.touchOver;
   return h('div',{className:'flex-shrink-0 rounded-xl p-1 md:p-1.5 bg-white shadow-sm border border-gray-100',style:{width:window.innerWidth<768?'150px':'185px',minWidth:window.innerWidth<768?'150px':'185px'},
+    'data-status':status,
     onDragOver:function(e){e.preventDefault();e.dataTransfer.dropEffect='move';setOver(true)},
     onDragLeave:function(e){if(!e.currentTarget.contains(e.relatedTarget))setOver(false)},
     onDrop:function(e){e.preventDefault();setOver(false);var id=parseInt(e.dataTransfer.getData('text/plain'));if(id)onDrop(id,status)}},
     h('div',{className:'text-center font-bold text-[10px] md:text-xs py-1.5 md:py-2 rounded-lg mb-1 md:mb-1.5',style:{background:STATUS_COLORS[status]||'#f5f5f5',color:'#333'}},status+' ('+leads.length+')'),
-    h('div',{className:'min-h-[40px] md:min-h-[60px] rounded-lg transition-all '+(isOver?'drag-over':'')},
+    h('div',{className:'min-h-[40px] md:min-h-[60px] rounded-lg transition-all '+(active?'drag-over':'')},
       leads.length===0?h('p',{className:'text-center text-gray-300 italic py-4 md:py-6',style:{fontSize:'9px'}},'Пусто'):null,
-      leads.map(function(l){return h(KanbanCard,{key:l.id,lead:l})})
+      leads.map(function(l){return h(KanbanCard,{key:l.id,lead:l,onTouchStart:p.onTouchStart})})
     )
   );
 }
@@ -208,11 +218,61 @@ function KanbanPage(p){
     setLL(function(prev){return prev.map(function(l){return l.id===id?Object.assign({},l,{status:newStatus}):l})});
     saveLead(id,{status:newStatus}).then(function(){onRefresh()});
   },[onRefresh]);
+
+  var td=React.useState(null);
+  var touchDrag=td[0],setTouchDrag=td[1];
+  var ghostRef=React.useRef(null);
+
+  function onTouchStart(id,x,y,el){
+    var r=el.getBoundingClientRect();
+    setTouchDrag({id:id,offsetX:x-r.left,offsetY:y-r.top,x:x,y:y,overCol:null});
+    el.classList.add('dragging');
+  }
+
+  React.useEffect(function(){
+    if(!touchDrag)return;
+    function onMove(e){
+      e.preventDefault();
+      var t=e.touches[0];
+      setTouchDrag(function(prev){return prev?Object.assign({},prev,{x:t.clientX,y:t.clientY}):prev});
+      var el=document.elementFromPoint(t.clientX,t.clientY);
+      if(!el)return;
+      var col=el.closest('[data-status]');
+      setTouchDrag(function(prev){return prev?Object.assign({},prev,{overCol:col?col.getAttribute('data-status'):null}):prev});
+    }
+    function onEnd(e){
+      setTouchDrag(function(prev){
+        if(prev&&prev.overCol){
+          var id=prev.id;
+          var lead=ref.current.find(function(l){return l.id===id});
+          if(lead&&lead.status!==prev.overCol){
+            setLL(function(pp){return pp.map(function(l){return l.id===id?Object.assign({},l,{status:prev.overCol}):l})});
+            saveLead(id,{status:prev.overCol}).then(function(){onRefresh()});
+          }
+        }
+        return null;
+      });
+      document.querySelectorAll('.dragging').forEach(function(el){el.classList.remove('dragging')});
+    }
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('touchend',onEnd);
+    document.addEventListener('touchcancel',onEnd);
+    return function(){
+      document.removeEventListener('touchmove',onMove);
+      document.removeEventListener('touchend',onEnd);
+      document.removeEventListener('touchcancel',onEnd);
+    };
+  },!!touchDrag);
+
   var groups={};STATUSES.forEach(function(s){groups[s]=[]});ll.forEach(function(l){if(groups[l.status])groups[l.status].push(l)});
   return h('div',null,
+    touchDrag?h('div',{className:'touch-ghost',style:{left:touchDrag.x-touchDrag.offsetX+'px',top:touchDrag.y-touchDrag.offsetY+'px',width:'150px'}},
+      h('div',{className:'bg-white rounded-lg p-2.5 shadow-lg',style:{borderLeft:'4px solid #ff4b4b'}},
+        h('p',{className:'font-bold text-xs text-gray-800'},(ll.find(function(l){return l.id===touchDrag.id})||{}).full_name||''))
+    ):null,
     h('h1',{className:'text-xl md:text-2xl font-bold mb-3 md:mb-4'},'🗂 Канбан-доска'),
-    h('div',{className:'flex gap-1.5 md:gap-2 overflow-x-auto pb-4 -mx-2 md:mx-0 px-2 md:px-0',style:{minHeight:'400px',WebkitOverflowScrolling:'touch'}},
-      STATUSES.map(function(s){return h(KanbanColumn,{key:s,status:s,leads:groups[s]||[],onDrop:handleDrop})})
+    h('div',{className:'flex gap-1.5 md:gap-2 overflow-x-auto pb-4 -mx-2 md:mx-0 px-2 md:px-0 kanban-touch',style:{minHeight:'400px',WebkitOverflowScrolling:'touch'}},
+      STATUSES.map(function(s){return h(KanbanColumn,{key:s,status:s,leads:groups[s]||[],onDrop:handleDrop,touchOver:touchDrag&&touchDrag.overCol===s,onTouchStart:onTouchStart})})
     )
   );
 }
