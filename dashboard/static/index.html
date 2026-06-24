@@ -57,19 +57,29 @@ function fileIcon(name){
 function renderFiles(text,compact){
   if(!text)return null;
   var parts=text.split(/(\[[^\]]*\]\([^)]*\))/g);
-  return parts.map(function(part,i){
+  var textParts=[];
+  var fileParts=[];
+  parts.forEach(function(part,i){
     var m=part.match(/^\[([^\]]*)\]\(([^)]*)\)$/);
     if(m){
       var name=m[1],url=m[2];
       var icon=fileIcon(name);
       var isImg=name==='Фото'||name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-      if(compact)return h('a',{key:i,href:url,target:'_blank',title:name,className:'inline-block text-lg hover:scale-125 transition-transform'},icon);
-      return h('a',{key:i,href:url,target:'_blank',download:!isImg?name:undefined,className:'inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg px-2 py-1 text-xs transition-colors mr-1 mb-1'},
-        h('span',null,icon),' ',h('span',{className:'underline'},isImg?'Просмотреть':'Скачать '+name));
+      if(compact){
+        fileParts.push(h('a',{key:'f'+i,href:url,target:'_blank',title:name,className:'inline-block text-lg hover:scale-125 transition-transform'},icon));
+      }else{
+        fileParts.push(h('a',{key:'f'+i,href:url,target:'_blank',download:!isImg?name:undefined,className:'inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg px-2 py-1 text-xs transition-colors mr-1 mb-1'},
+          h('span',null,icon),' ',h('span',{className:'underline'},isImg?'Просмотреть':'Скачать '+name)));
+      }
+    }else if(part.trim()){
+      var cleaned=part.trim().replace(/[\uD83C-\uDBFF\uDC00-\uDFFF]/g,'').trim();
+      if(cleaned)textParts.push(h('span',{key:'t'+i},cleaned));
     }
-    if(compact)return null;
-    return h('span',{key:i},part);
   });
+  var result=[];
+  if(textParts.length>0)result.push(h('div',{key:'txt',className:compact?'text-gray-600 line-clamp-2 break-words':'text-gray-600 whitespace-pre-wrap'},textParts));
+  if(fileParts.length>0)result.push(h('div',{key:'files',className:'flex flex-wrap gap-1 mt-1'},fileParts));
+  return result.length>0?result:null;
 }
 
 function Sidebar(p){
