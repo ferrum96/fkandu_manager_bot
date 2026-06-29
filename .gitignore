@@ -1,6 +1,1 @@
-.env
-credentials.json
-bot.log
-api.log
-db/leads.db
-uploads/
+.DS_Store

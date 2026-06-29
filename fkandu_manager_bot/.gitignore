@@ -1,0 +1,6 @@
+.env
+bot.log
+api.log
+db/leads.db
+scripts/seed_db.py
+.DS_Store

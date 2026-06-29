@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DOMAIN="crm.fkandu.ru"
-PROJECT_DIR="/root/fkandu_manager_bot"
 
 echo "=== Деплой fkandu_manager_bot ==="
 

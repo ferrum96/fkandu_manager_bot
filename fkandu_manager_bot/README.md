@@ -52,5 +52,3 @@ nano .env  # BOT_TOKEN=... ADMIN_ID=...
 # 4. Запустить
 bash deploy/install.sh
 ```
-
-Доступ: **https://crm.fkandu.ru**

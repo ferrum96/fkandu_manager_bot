@@ -1,0 +1,5 @@
+python-telegram-bot[job-queue]==21.10
+python-dotenv==1.0.1
+gspread==6.1.4
+google-auth==2.37.0
+aiosqlite==0.20.0

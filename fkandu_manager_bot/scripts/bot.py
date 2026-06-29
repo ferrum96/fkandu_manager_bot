@@ -30,6 +30,7 @@ router = Router()
 dp.include_router(router)
 
 DB_PATH = os.path.join(BASE_DIR, "db", "leads.db")
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
 db.execute("""
     CREATE TABLE IF NOT EXISTS files (
