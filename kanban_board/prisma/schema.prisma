@@ -1,13 +1,83 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+model Board {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  columns   Column[]
+  epics     Epic[]
+  tasks     Task[]
+  labels    Label[]
+}
+
+model Column {
+  id        String   @id @default(uuid())
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title     String
+  position  Int
+  wipLimit  Int?
+  color     String   @default("#6B7280")
+  tasks     Task[]
+
+  @@unique([boardId, position])
+}
+
+model Epic {
+  id          String   @id @default(uuid())
+  boardId     String
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  color       String   @default("#3B82F6")
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+}
+
+model Task {
+  id            String   @id @default(uuid())
+  taskNumber    Int
+  boardId       String
+  board         Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  columnId      String
+  column        Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  epicId        String?
+  epic          Epic?    @relation(fields: [epicId], references: [id], onDelete: SetNull)
+  title         String
+  description   String?
+  priority      String   @default("MEDIUM")
+  assignee      String?
+  estimatedTime String?
+  position      Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  labels        TaskLabel[]
+
+  @@unique([boardId, taskNumber])
+  @@unique([columnId, position])
+}
+
+model Label {
+  id      String      @id @default(uuid())
+  boardId String
+  board   Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name    String
+  color   String      @default("#6B7280")
+  tasks   TaskLabel[]
+}
+
+model TaskLabel {
+  taskId  String
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  labelId String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
 }
