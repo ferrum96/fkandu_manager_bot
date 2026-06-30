@@ -122,7 +122,7 @@ export function BoardView({
               onClick={() => handleAddTask(board.columns[0]?.id)}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              + Задача
+              Новая задача
             </button>
           </div>
         </div>
