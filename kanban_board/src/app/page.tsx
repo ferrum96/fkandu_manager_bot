@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/Sidebar'
 import { BoardView } from '@/components/BoardView'
 import { useBoard } from '@/hooks/useBoard'
-import { CreateTaskInput } from '@/lib/types'
 
 type Board = {
   id: string
