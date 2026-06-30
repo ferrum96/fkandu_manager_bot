@@ -38,6 +38,10 @@ export async function POST(
 
     return NextResponse.json(label, { status: 201 })
   } catch (error) {
+    const prismaError = error as { code?: string }
+    if (prismaError.code === 'P2025') {
+      return NextResponse.json({ error: 'Board not found' }, { status: 404 })
+    }
     return NextResponse.json({ error: 'Failed to create label' }, { status: 500 })
   }
 }
