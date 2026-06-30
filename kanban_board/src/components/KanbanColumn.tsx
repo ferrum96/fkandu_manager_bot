@@ -18,13 +18,10 @@ export function KanbanColumn({ column, tasks, onTaskClick, onAddTask }: KanbanCo
   
   return (
     <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg flex flex-col max-h-[calc(100vh-140px)]">
+      <div className="h-1 w-full rounded-full" style={{ backgroundColor: column.color }} />
       <div className="p-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: column.color }}
-            />
             <h3 className="font-semibold text-sm uppercase">{column.title}</h3>
           </div>
           
