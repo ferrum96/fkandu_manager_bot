@@ -41,6 +41,13 @@ model Epic {
   tasks       Task[]
 }
 
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model Task {
   id            String   @id @default(uuid())
   taskNumber    Int
@@ -52,7 +59,7 @@ model Task {
   epic          Epic?    @relation(fields: [epicId], references: [id], onDelete: SetNull)
   title         String
   description   String?
-  priority      String   @default("MEDIUM")
+  priority      Priority @default(MEDIUM)
   assignee      String?
   estimatedTime String?
   position      Int
