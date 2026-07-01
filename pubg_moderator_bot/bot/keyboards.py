@@ -60,11 +60,11 @@ def perspective_keyboard() -> InlineKeyboardMarkup:
 
 def join_clan_keyboard(config: Config) -> InlineKeyboardMarkup:
     buttons = []
-    if config.telegram_channel_link:
+    if config.telegram_group_link:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    "📢 Telegram-канал", url=config.telegram_channel_link
+                    "👥 Telegram-группа", url=config.telegram_group_link
                 )
             ]
         )
@@ -76,7 +76,7 @@ def join_clan_keyboard(config: Config) -> InlineKeyboardMarkup:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    "Вступить в канал клана",
+                    "Вступить в группу клана",
                     callback_data="join:info",
                 )
             ]

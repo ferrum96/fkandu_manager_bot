@@ -14,12 +14,21 @@ def _parse_admin_ids(raw: str) -> list[int]:
     return [int(x.strip()) for x in raw.split(",") if x.strip()]
 
 
+def _env_first(*names: str, default: str = "") -> str:
+    """Return the first non-empty env value across the provided names."""
+    for name in names:
+        value = os.getenv(name, "")
+        if value:
+            return value
+    return default
+
+
 @dataclass(frozen=True)
 class Config:
     bot_token: str
-    channel_id: int
+    group_id: int
     admin_ids: list[int] = field(default_factory=list)
-    telegram_channel_link: str = ""
+    telegram_group_link: str = ""
     discord_link: str = ""
     google_sheets_credentials_file: str = ""
     google_sheet_id: str = ""
@@ -32,15 +41,18 @@ class Config:
         if not token:
             raise ValueError("BOT_TOKEN is required")
 
-        channel_id = os.getenv("CHANNEL_ID", "")
-        if not channel_id:
-            raise ValueError("CHANNEL_ID is required")
+        # GROUP_ID is the canonical name; CHANNEL_ID kept for backward compat.
+        group_id = _env_first("GROUP_ID", "CHANNEL_ID")
+        if not group_id:
+            raise ValueError("GROUP_ID is required")
 
         return cls(
             bot_token=token,
-            channel_id=int(channel_id),
+            group_id=int(group_id),
             admin_ids=_parse_admin_ids(os.getenv("ADMIN_IDS", "")),
-            telegram_channel_link=os.getenv("TELEGRAM_CHANNEL_LINK", ""),
+            telegram_group_link=_env_first(
+                "TELEGRAM_GROUP_LINK", "TELEGRAM_CHANNEL_LINK"
+            ),
             discord_link=os.getenv("DISCORD_LINK", ""),
             google_sheets_credentials_file=os.getenv(
                 "GOOGLE_SHEETS_CREDENTIALS_FILE", ""

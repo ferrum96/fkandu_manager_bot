@@ -12,6 +12,7 @@ from bot.config import Config
 from bot.database import Database
 from bot.google_sheets import SheetsSync
 from bot.handlers.admin import (
+    cmd_assign_titles,
     cmd_blacklist,
     cmd_help_admin,
     cmd_kick_non_members,
@@ -60,6 +61,7 @@ def main() -> None:
     application.add_handler(CommandHandler("blacklist", cmd_blacklist))
     application.add_handler(CommandHandler("unblacklist", cmd_unblacklist))
     application.add_handler(CommandHandler("kick_non_members", cmd_kick_non_members))
+    application.add_handler(CommandHandler("assign_titles", cmd_assign_titles))
     application.add_handler(CommandHandler("admin_help", cmd_help_admin))
 
     application.add_handler(

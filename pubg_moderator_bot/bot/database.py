@@ -74,13 +74,35 @@ class Database:
                 attempts INTEGER NOT NULL DEFAULT 0
             );
 
-            CREATE TABLE IF NOT EXISTS channel_members (
+            CREATE TABLE IF NOT EXISTS group_members (
                 user_id INTEGER PRIMARY KEY,
                 joined_at TEXT NOT NULL
             );
             """
         )
+        await self._migrate_channel_members_table(db)
         await db.commit()
+
+    async def _migrate_channel_members_table(
+        self, db: aiosqlite.Connection
+    ) -> None:
+        """Copy rows from the legacy channel_members table into group_members."""
+        cursor = await db.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name='channel_members'"
+        )
+        if not await cursor.fetchone():
+            return
+
+        await db.execute(
+            """
+            INSERT INTO group_members (user_id, joined_at)
+            SELECT user_id, joined_at FROM channel_members
+            WHERE true
+            ON CONFLICT(user_id) DO NOTHING
+            """
+        )
+        await db.execute("DROP TABLE channel_members")
 
     async def is_blacklisted(self, user_id: int) -> bool:
         db = await self.connect()
@@ -129,6 +151,16 @@ class Database:
             "SELECT 1 FROM members WHERE user_id = ?", (user_id,)
         )
         return await cursor.fetchone() is not None
+
+    async def get_member(self, user_id: int) -> Optional[Member]:
+        db = await self.connect()
+        cursor = await db.execute(
+            "SELECT * FROM members WHERE user_id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return None
+        return _row_to_member(row)
 
     async def save_member(
         self,
@@ -274,12 +306,12 @@ class Database:
         )
         return attempts
 
-    async def track_channel_member(self, user_id: int) -> None:
+    async def track_group_member(self, user_id: int) -> None:
         now = datetime.now(timezone.utc).isoformat()
         db = await self.connect()
         await db.execute(
             """
-            INSERT INTO channel_members (user_id, joined_at)
+            INSERT INTO group_members (user_id, joined_at)
             VALUES (?, ?)
             ON CONFLICT(user_id) DO NOTHING
             """,
@@ -287,16 +319,16 @@ class Database:
         )
         await db.commit()
 
-    async def untrack_channel_member(self, user_id: int) -> None:
+    async def untrack_group_member(self, user_id: int) -> None:
         db = await self.connect()
         await db.execute(
-            "DELETE FROM channel_members WHERE user_id = ?", (user_id,)
+            "DELETE FROM group_members WHERE user_id = ?", (user_id,)
         )
         await db.commit()
 
-    async def get_channel_member_ids(self) -> set[int]:
+    async def get_group_member_ids(self) -> set[int]:
         db = await self.connect()
-        cursor = await db.execute("SELECT user_id FROM channel_members")
+        cursor = await db.execute("SELECT user_id FROM group_members")
         rows = await cursor.fetchall()
         return {r["user_id"] for r in rows}
 
