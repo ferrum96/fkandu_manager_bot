@@ -18,7 +18,8 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "leads.db")
+PROJECT_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
+DB_PATH = os.path.join(PROJECT_DIR, "data", "leads.db")
 
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 

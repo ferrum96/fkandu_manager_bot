@@ -124,7 +124,7 @@ export function renderFiles(text: string | null, compact: boolean = false): Reac
   return result.length > 0 ? <>{result}</> : null;
 }
 
-export async function api(path: string, options?: RequestInit): Promise<any> {
+export async function api<T = unknown>(path: string, options?: RequestInit): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
   const url = baseUrl + path;
   const response = await fetch(url, {
@@ -134,7 +134,7 @@ export async function api(path: string, options?: RequestInit): Promise<any> {
   return response.json();
 }
 
-export async function saveLead(id: number, data: Partial<Lead>): Promise<any> {
+export async function saveLead(id: number, data: Partial<Lead>): Promise<unknown> {
   return api('/api/leads/' + id, {
     method: 'PATCH',
     body: JSON.stringify(data),

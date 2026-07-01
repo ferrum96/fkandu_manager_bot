@@ -12,18 +12,19 @@ interface KanbanColumnProps {
   touchOver: boolean;
   onTouchStart?: (id: number, x: number, y: number, el: HTMLElement) => void;
   setPage?: (page: Page) => void;
+  onOpenLead?: (id: number) => void;
 }
 
-export function KanbanColumn({ status, leads, onDrop, touchOver, onTouchStart, setPage }: KanbanColumnProps) {
+export function KanbanColumn({ status, leads, onDrop, touchOver, onTouchStart, setPage, onOpenLead }: KanbanColumnProps) {
   const [isOver, setIsOver] = useState(false);
   const active = isOver || touchOver;
 
   return (
     <div
-      className="flex-shrink-0 rounded-xl p-1 md:p-1.5 bg-white shadow-sm border border-gray-100 overflow-hidden"
+      className="flex-shrink-0 rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden flex flex-col kanban-col"
       style={{
-        width: '185px',
-        minWidth: '185px',
+        width: 'clamp(180px, 26vw, 250px)',
+        minWidth: 'clamp(180px, 26vw, 250px)',
       }}
       data-status={status}
       onDragOver={(e) => {
@@ -44,22 +45,22 @@ export function KanbanColumn({ status, leads, onDrop, touchOver, onTouchStart, s
       }}
     >
       <div
-        className="text-center font-bold text-[10px] md:text-xs py-1.5 md:py-2 rounded-lg mb-1 md:mb-1.5"
+        className="text-center font-semibold text-xs md:text-sm py-2 rounded-t-lg mb-3"
         style={{
-          background: STATUS_COLORS[status] || '#f5f5f5',
-          color: '#333',
+          background: STATUS_COLORS[status] || '#F3F4F6',
+          color: '#1F2937',
         }}
       >
         {status} ({leads.length})
       </div>
-      <div className={`min-h-[40px] md:min-h-[60px] rounded-lg transition-all min-w-0 ${active ? 'drag-over' : ''}`}>
+      <div className={`flex-1 min-h-[48px] md:min-h-[64px] rounded-lg transition-all min-w-0 overflow-y-auto p-1 ${active ? 'drag-over' : ''}`}>
         {leads.length === 0 ? (
-          <p className="text-center text-gray-300 italic py-4 md:py-6" style={{ fontSize: '9px' }}>
+          <p className="text-center text-gray-400 italic py-4 md:py-6 text-xs">
             Пусто
           </p>
         ) : null}
         {leads.map((l) => (
-          <KanbanCard key={l.id} lead={l} onTouchStart={onTouchStart} setPage={setPage} />
+          <KanbanCard key={l.id} lead={l} onTouchStart={onTouchStart} setPage={setPage} onOpenLead={onOpenLead} />
         ))}
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Lead, Stats, Page, PAGES } from '@/lib/types';
 import { api } from '@/lib/utils';
 import { Sidebar } from '@/components/Sidebar';
@@ -10,10 +10,11 @@ import { LeadsPage } from '@/components/LeadsPage';
 import { HotLeadsPage } from '@/components/HotLeadsPage';
 import { AnalyticsPage } from '@/components/AnalyticsPage';
 
+const VALID_PAGES: Page[] = ['dashboard', 'kanban', 'leads', 'hot', 'analytics'];
+
 export default function Home() {
-  const validPages: Page[] = ['dashboard', 'kanban', 'leads', 'hot', 'analytics'];
   const hash = (typeof window !== 'undefined' ? window.location.hash : '').replace('#', '').split('?')[0];
-  const initial: Page = validPages.includes(hash as Page) ? (hash as Page) : 'kanban';
+  const initial: Page = VALID_PAGES.includes(hash as Page) ? (hash as Page) : 'kanban';
 
   const [page, setPageRaw] = useState<Page>(initial);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -31,11 +32,17 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const [openLeadId, setOpenLeadId] = useState<number | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isMobile = useSyncExternalStore(
+    (callback) => {
+      const mq = window.matchMedia('(max-width: 767px)');
+      mq.addEventListener('change', callback);
+      return () => mq.removeEventListener('change', callback);
+    },
+    () => window.matchMedia('(max-width: 767px)').matches,
+    () => false
+  );
 
   const setPage = (p: Page) => {
     window.location.hash = p;
@@ -43,7 +50,7 @@ export default function Home() {
   };
 
   const refresh = useCallback(() => {
-    Promise.all([api('/api/leads'), api('/api/stats')])
+    Promise.all([api<Lead[]>('/api/leads'), api<Stats>('/api/stats')])
       .then(([leadsData, statsData]) => {
         setLeads(leadsData);
         setStats(statsData);
@@ -66,7 +73,7 @@ export default function Home() {
   useEffect(() => {
     const handler = () => {
       const h = (window.location.hash || '').replace('#', '').split('?')[0];
-      if (validPages.includes(h as Page)) {
+      if (VALID_PAGES.includes(h as Page)) {
         setPageRaw(h as Page);
       }
     };
@@ -76,10 +83,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen safe-top">
         <div className="text-center">
           <p className="text-4xl mb-4">🌸</p>
-          <p className="text-gray-500">Загрузка...</p>
+          <p className="text-gray-500 text-sm">Загрузка...</p>
         </div>
       </div>
     );
@@ -88,8 +95,8 @@ export default function Home() {
   const currentPage = PAGES.find((p) => p.k === page);
 
   const getMarginLeft = () => {
-    if (!mounted) return '40px';
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return '0';
+    if (typeof window === 'undefined') return '0px';
+    if (isMobile) return '0';
     return collapsed ? '40px' : '224px';
   };
 
@@ -105,24 +112,30 @@ export default function Home() {
       />
 
       <main
-        className="flex-1 transition-all duration-300"
+        className="flex-1 transition-all duration-300 min-w-0"
         style={{ marginLeft: getMarginLeft() }}
       >
-        <div className="md:hidden sticky top-0 z-40 bg-white border-b border-gray-100 px-3 py-2.5 flex items-center gap-3 shadow-sm">
-          <button onClick={() => setMenuOpen(true)} className="text-gray-600 text-xl">
-            ☰
-          </button>
-          <span className="font-bold text-sm">
-            {currentPage ? currentPage.i + ' ' + currentPage.l : 'CRM'}
-          </span>
-        </div>
+        {/* Mobile hamburger - absolute positioned */}
+        {!menuOpen && (
+          <div className="md:hidden fixed top-3 pl-4 z-50">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="text-gray-600 text-xl w-11 h-11 flex items-center justify-center active:bg-gray-100 rounded-lg transition-colors bg-white/80 backdrop-blur-sm shadow-sm"
+            >
+              ☰
+            </button>
+          </div>
+        )}
 
-        <div className="p-3 md:p-6">
-          {page === 'dashboard' && <DashboardPage leads={leads} stats={stats} />}
-          {page === 'kanban' && <KanbanPage leads={leads} onRefresh={refresh} setPage={setPage} />}
-          {page === 'leads' && <LeadsPage leads={leads} onRefresh={refresh} />}
-          {page === 'hot' && <HotLeadsPage leads={leads} />}
-          {page === 'analytics' && <AnalyticsPage stats={stats} />}
+        {/* 8pt grid padding: 16px mobile, 24px tablet, 32px desktop, 48px large */}
+        <div className="p-2 md:p-4 lg:p-6 xl:p-8 safe-bottom flex flex-col" style={{ minHeight: 'calc(100vh - 0px)' }}>
+          <div key={page} className={`page-enter ${page === 'kanban' ? 'flex flex-col flex-1 min-h-0' : ''}`}>
+            {page === 'dashboard' && <DashboardPage leads={leads} stats={stats} />}
+            {page === 'kanban' && <KanbanPage leads={leads} onRefresh={refresh} setPage={setPage} onOpenLead={(id) => { setOpenLeadId(id); setPage('leads'); }} />}
+            {page === 'leads' && <LeadsPage leads={leads} onRefresh={refresh} openLeadId={openLeadId} onLeadOpened={() => setOpenLeadId(null)} />}
+            {page === 'hot' && <HotLeadsPage leads={leads} />}
+            {page === 'analytics' && <AnalyticsPage stats={stats} />}
+          </div>
         </div>
       </main>
     </div>
