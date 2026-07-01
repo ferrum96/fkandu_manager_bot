@@ -10,7 +10,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/certs:/etc/letsencrypt:ro
+      - ./nginx/www:/var/www/certbot:ro
     depends_on:
       - kanban
       - fkandu-bot
@@ -18,6 +19,15 @@ services:
       - pubg-bot
     networks:
       - app-network
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - ./nginx/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   kanban:
     build:
@@ -42,7 +52,7 @@ services:
     container_name: fkandu-bot
     restart: unless-stopped
     expose:
-      - "3001"
+      - "8088"
     env_file:
       - ./fkandu_manager_bot/.env
     volumes:
@@ -57,7 +67,7 @@ services:
     container_name: fkandu-dashboard
     restart: unless-stopped
     expose:
-      - "3002"
+      - "8000"
     env_file:
       - ./fkandu_manager_bot/.env
     volumes:
@@ -71,8 +81,6 @@ services:
       dockerfile: Dockerfile
     container_name: pubg-bot
     restart: unless-stopped
-    expose:
-      - "3003"
     env_file:
       - ./pubg_moderator_bot/.env
     volumes:
