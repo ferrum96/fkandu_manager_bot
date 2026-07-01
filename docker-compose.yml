@@ -34,8 +34,8 @@ services:
 
   fkandu-api:
     build:
-      context: ./fkandu_manager_bot
-      dockerfile: Dockerfile.api
+      context: ./fkandu_manager_bot/dashboard/backend
+      dockerfile: Dockerfile
     container_name: fkandu-api
     restart: unless-stopped
     ports:
@@ -47,7 +47,7 @@ services:
 
   fkandu-dashboard:
     build:
-      context: ./fkandu_manager_bot/dashboard
+      context: ./fkandu_manager_bot/dashboard/frontend
       dockerfile: Dockerfile
     container_name: fkandu-dashboard
     restart: unless-stopped
