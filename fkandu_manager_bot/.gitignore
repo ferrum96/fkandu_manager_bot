@@ -7,8 +7,8 @@ bot.log
 api.log
 
 # Database
-db/leads.db
-db/*.db
+data/leads.db
+data/*.db
 
 # Frontend
 dashboard/frontend/.next

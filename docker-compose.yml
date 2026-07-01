@@ -28,7 +28,7 @@ services:
     env_file:
       - ./fkandu_manager_bot/.env
     volumes:
-      - ./fkandu_manager_bot/db:/app/db
+      - ./fkandu_manager_bot/data:/app/data
     networks:
       - app-network
 
@@ -41,7 +41,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ./fkandu_manager_bot/db:/app/db
+      - ./fkandu_manager_bot/data:/app/data
     networks:
       - app-network
 

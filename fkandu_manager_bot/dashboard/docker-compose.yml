@@ -24,7 +24,7 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - ../db:/app/db
+      - ../data:/app/data
     networks:
       - dashboard-network
 

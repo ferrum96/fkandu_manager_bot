@@ -28,7 +28,7 @@ class Config:
             raise ValueError("ADMIN_ID is required")
 
         hostname = os.getenv("HOSTNAME", "localhost")
-        db_path = os.path.join(BASE_DIR, "db", "leads.db")
+        db_path = os.path.join(BASE_DIR, "data", "leads.db")
 
         return cls(
             bot_token=token,
