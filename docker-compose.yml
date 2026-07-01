@@ -24,7 +24,7 @@ services:
     container_name: fkandu-bot
     restart: unless-stopped
     ports:
-      - "8088:8088"
+      - "3001:8088"
     env_file:
       - ./fkandu_manager_bot/.env
     volumes:
@@ -39,7 +39,7 @@ services:
     container_name: fkandu-api
     restart: unless-stopped
     ports:
-      - "8001:8000"
+      - "3002:8000"
     volumes:
       - ./fkandu_manager_bot/data:/app/data
     networks:
@@ -52,10 +52,10 @@ services:
     container_name: fkandu-dashboard
     restart: unless-stopped
     ports:
-      - "8000:3000"
+      - "3003:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXT_PUBLIC_API_URL=http://localhost:3002
     networks:
       - app-network
 
