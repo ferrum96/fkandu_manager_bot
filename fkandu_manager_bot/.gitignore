@@ -5,16 +5,30 @@
 # Logs
 bot.log
 api.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Database
 data/leads.db
 data/*.db
+*.db
 
 # Frontend
 dashboard/frontend/.next
 dashboard/frontend/node_modules
-dashboard/frontend/.env*
-dashboard/frontend/.env.local
+dashboard/frontend/.pnp
+dashboard/frontend/.pnp.*
+dashboard/frontend/.yarn/*
+!dashboard/frontend/.yarn/patches
+!dashboard/frontend/.yarn/plugins
+!dashboard/frontend/.yarn/releases
+!dashboard/frontend/.yarn/versions
+dashboard/frontend/out/
+dashboard/frontend/build/
+dashboard/frontend/.vercel
+dashboard/frontend/*.tsbuildinfo
+dashboard/frontend/next-env.d.ts
 
 # Backend
 dashboard/backend/__pycache__
@@ -24,16 +38,23 @@ dashboard/backend/.venv
 # Bot
 bot/__pycache__
 bot/**/*.pyc
-.venv
 __pycache__
 *.pyc
+.venv
 
-# OS
+# Testing
+coverage/
+
+# Misc
 .DS_Store
 Thumbs.db
+*.pem
 
 # IDE
 .vscode
 .idea
 *.swp
 *.swo
+
+# Prisma
+src/generated/prisma
