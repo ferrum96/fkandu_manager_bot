@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 COPY frontend/package.json frontend/package-lock.json ./
@@ -17,6 +17,7 @@ COPY frontend/ .
 COPY backend/prisma ./prisma
 COPY backend/prisma.config.ts .
 
+RUN sed -i 's|output.*=.*|output = "../node_modules/.prisma/client"|' prisma/schema.prisma
 RUN npx prisma generate
 RUN npm run build
 

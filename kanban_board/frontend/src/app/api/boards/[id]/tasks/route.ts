@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Priority } from '@prisma/client'
 import { CreateTaskInput, TaskFilters } from '@/lib/types'
+
+type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 
 export async function GET(
   request: Request,
@@ -71,7 +72,7 @@ export async function POST(
         title: body.title,
         description: body.description,
         epicId: body.epicId,
-        priority: (body.priority as Priority) || Priority.MEDIUM,
+        priority: (body.priority as Priority) || 'MEDIUM',
         assignee: body.assignee,
         estimatedTime: body.estimatedTime,
         position: (maxPosition._max.position ?? -1) + 1,

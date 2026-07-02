@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Priority } from '@prisma/client'
 import { UpdateTaskInput } from '@/lib/types'
 
 export async function GET(
@@ -36,12 +35,12 @@ export async function PUT(
 
   try {
     const { columnId, ...scalarData } = data
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.task.update({
         where: { id },
         data: {
           ...scalarData,
-          priority: scalarData.priority as Priority | undefined,
+          priority: scalarData.priority as string | undefined,
           ...(columnId !== undefined && { columnId }),
         },
       })

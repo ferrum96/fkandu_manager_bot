@@ -23,14 +23,11 @@ services:
       dockerfile: Dockerfile
     container_name: fkandu-bot
     restart: unless-stopped
-    ports:
-      - "3001:8088"
+    network_mode: host
     env_file:
       - ./fkandu_manager_bot/.env
     volumes:
       - ./fkandu_manager_bot/data:/app/data
-    networks:
-      - app-network
 
   fkandu-api:
     build:
@@ -65,12 +62,11 @@ services:
       dockerfile: Dockerfile
     container_name: pubg-bot
     restart: unless-stopped
+    network_mode: host
     env_file:
       - ./pubg_moderator_bot/.env
     volumes:
       - ./pubg_moderator_bot/data:/app/data
-    networks:
-      - app-network
 
 networks:
   app-network:

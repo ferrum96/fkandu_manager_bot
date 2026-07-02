@@ -18,7 +18,7 @@ export async function PATCH(
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.task.updateMany({
         where: {
           columnId: task.columnId,
