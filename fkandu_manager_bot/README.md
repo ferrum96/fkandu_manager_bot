@@ -61,37 +61,29 @@ npm run dev
 ## Docker
 
 ```bash
-# Из корня BotsRepo/
-docker-compose up -d --build
-```
-
-Сервисы (порты на хосте):
-- `fkandu-nginx` — reverse proxy → **http://IP** (порт 80)
-- `fkandu-frontend` — дашборд → `127.0.0.1:8000` (через nginx)
-- `fkandu-backend` — API → `127.0.0.1:8001` (через nginx `/api/`)
-- `fkandu-bot` — бот + файловый сервер → порт 8088 (через nginx `/files/`)
-
-Снаружи открывайте только порт **80** в firewall хостера:
-
-```bash
-# Проверка с Mac
-curl -I http://2.26.249.118
-curl http://2.26.249.118/api/stats
-```
-
-Запуск nginx:
-
-```bash
 cd fkandu_manager_bot
-docker compose up -d nginx
+docker compose up -d --build
 ```
 
-Если порт 80 занят:
+### Nginx на сервере (порт 80 уже занят системным nginx)
 
 ```bash
-ss -tlnp | grep :80
-systemctl stop nginx   # если системный nginx мешает
+sudo cp nginx/fkandu.conf /etc/nginx/sites-available/fkandu
+sudo ln -sf /etc/nginx/sites-available/fkandu /etc/nginx/sites-enabled/fkandu
+sudo rm -f /etc/nginx/sites-enabled/default   # если мешает дефолтный сайт
+sudo nginx -t && sudo systemctl reload nginx
 ```
+
+Схема:
+- системный **nginx:80** → прокси
+- **127.0.0.1:8000** → frontend (Docker)
+- **127.0.0.1:8001** → backend API (Docker)
+- **127.0.0.1:8088** → файлы бота
+
+Сервисы:
+- **http://IP** — дашборд (системный nginx → frontend:8000)
+- `/api/` — backend API (nginx → 8001)
+- `/files/` — файлы бота (nginx → 8088)
 
 ## Переменные окружения
 

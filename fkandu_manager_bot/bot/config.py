@@ -30,7 +30,7 @@ class Config:
 
         hostname = os.getenv("HOSTNAME", "localhost")
         proxy_url = os.getenv("PROXY_URL") or None
-        db_path = os.path.join(BASE_DIR, "data", "leads.db")
+        db_path = os.getenv("DB_PATH", os.path.join(BASE_DIR, "data", "leads.db"))
 
         return cls(
             bot_token=token,

@@ -1,28 +1,18 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: fkandu-nginx
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - frontend
-      - backend
-
   frontend:
     build:
       context: ./dashboard/frontend
       dockerfile: Dockerfile
-      args:
-        API_INTERNAL_URL: http://127.0.0.1:8001
     container_name: fkandu-frontend
     restart: unless-stopped
-    network_mode: host
+    ports:
+      - "127.0.0.1:8000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=8000
+      - PORT=3000
       - HOSTNAME=0.0.0.0
+    networks:
+      - fkandu
 
   backend:
     build:
@@ -30,12 +20,14 @@ services:
       dockerfile: Dockerfile
     container_name: fkandu-backend
     restart: unless-stopped
-    network_mode: host
-    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "127.0.0.1:8001:8000"
     environment:
       - DB_PATH=/app/data/leads.db
     volumes:
       - ./data:/app/data
+    networks:
+      - fkandu
 
   bot:
     build: .
@@ -44,5 +36,11 @@ services:
     network_mode: host
     env_file:
       - .env
+    environment:
+      - DB_PATH=/app/data/leads.db
     volumes:
       - ./data:/app/data
+
+networks:
+  fkandu:
+    driver: bridge

@@ -304,7 +304,7 @@ async def process_timeline(
         f"📅 <b>Сроки:</b> {timeline_text}\n\n"
         f"📊 <b>Оценка:</b> {score}\n\n"
         f'💬 <a href="https://t.me/{user.username}">Написать в ЛС</a>\n'
-        f'📊 <a href="http://{config.hostname}:8000">Открыть дашборд</a>'
+        f'📊 <a href="http://{config.hostname}">Открыть дашборд</a>'
     )
     try:
         await bot.send_message(config.admin_id, admin_msg, parse_mode="HTML", disable_web_page_preview=True)

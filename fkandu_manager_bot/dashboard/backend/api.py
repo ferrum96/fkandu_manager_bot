@@ -75,6 +75,13 @@ class LeadUpdate(BaseModel):
     deal_amount: Optional[float] = None
 
 
+@app.get("/api/health")
+def health():
+    with get_db() as conn:
+        count = conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0]
+    return {"ok": True, "db_path": DB_PATH, "leads_count": count}
+
+
 @app.get("/api/leads")
 def get_leads():
     with get_db() as conn:

@@ -57,6 +57,7 @@ async def handle_file(request: web.Request) -> web.Response:
 async def main():
     config = Config.from_env()
     db = Database(config.db_path)
+    logger.info(f"База данных: {config.db_path}")
 
     session_kwargs: dict[str, Any] = {}
     if config.proxy_url:

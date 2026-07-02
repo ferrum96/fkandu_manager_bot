@@ -30,6 +30,7 @@ export default function Home() {
     category_revenue: [],
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
   const [openLeadId, setOpenLeadId] = useState<number | null>(null);
@@ -54,9 +55,11 @@ export default function Home() {
       .then(([leadsData, statsData]) => {
         setLeads(leadsData);
         setStats(statsData);
+        setError(null);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err: Error) => {
+        setError(err.message || 'Не удалось загрузить данные');
         setLoading(false);
       });
   }, []);
@@ -80,6 +83,24 @@ export default function Home() {
     window.addEventListener('hashchange', handler);
     return () => window.removeEventListener('hashchange', handler);
   }, []);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen safe-top">
+        <div className="text-center max-w-md px-4">
+          <p className="text-4xl mb-4">⚠️</p>
+          <p className="text-gray-800 font-medium mb-2">Ошибка загрузки данных</p>
+          <p className="text-gray-500 text-sm mb-4">{error}</p>
+          <button
+            onClick={refresh}
+            className="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm"
+          >
+            Повторить
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
