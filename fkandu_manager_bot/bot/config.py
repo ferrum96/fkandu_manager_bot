@@ -14,6 +14,7 @@ class Config:
     bot_token: str
     admin_id: int
     hostname: str
+    proxy_url: str | None
     file_server_port: int = 8088
     db_path: str = ""
 
@@ -28,11 +29,13 @@ class Config:
             raise ValueError("ADMIN_ID is required")
 
         hostname = os.getenv("HOSTNAME", "localhost")
+        proxy_url = os.getenv("PROXY_URL") or None
         db_path = os.path.join(BASE_DIR, "data", "leads.db")
 
         return cls(
             bot_token=token,
             admin_id=int(admin_id),
             hostname=hostname,
+            proxy_url=proxy_url,
             db_path=db_path,
         )

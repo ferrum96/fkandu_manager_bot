@@ -2,9 +2,22 @@
 
 import logging
 import asyncio
+import socket
+
+_original_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    return _original_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
+socket.getaddrinfo = _ipv4_getaddrinfo
+
+from typing import Any
 
 from aiohttp import web
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import Config
@@ -16,6 +29,15 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+class IPv4AiohttpSession(AiohttpSession):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        if self._proxy is None:
+            self._connector_init["family"] = socket.AF_INET
+            self._connector_init["happy_eyeballs_delay"] = None
+        self._connector_init["force_close"] = True
 
 
 async def handle_file(request: web.Request) -> web.Response:
@@ -36,7 +58,12 @@ async def main():
     config = Config.from_env()
     db = Database(config.db_path)
 
-    bot = Bot(token=config.bot_token)
+    session_kwargs: dict[str, Any] = {}
+    if config.proxy_url:
+        session_kwargs["proxy"] = config.proxy_url
+        logger.info("Используется прокси для Telegram API")
+    session = IPv4AiohttpSession(**session_kwargs)
+    bot = Bot(token=config.bot_token, session=session)
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(lead_form_router)
