@@ -5,15 +5,15 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        API_INTERNAL_URL: http://127.0.0.1:8001
     container_name: fkandu-frontend
     restart: unless-stopped
-    ports:
-      - "8000:3000"
+    network_mode: host
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8001
-    networks:
-      - dashboard-network
+      - PORT=8000
+      - HOSTNAME=0.0.0.0
 
   backend:
     build:
@@ -21,13 +21,7 @@ services:
       dockerfile: Dockerfile
     container_name: fkandu-backend
     restart: unless-stopped
-    ports:
-      - "8001:8000"
+    network_mode: host
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8001"]
     volumes:
       - ../data:/app/data
-    networks:
-      - dashboard-network
-
-networks:
-  dashboard-network:
-    driver: bridge

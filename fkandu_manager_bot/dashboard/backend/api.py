@@ -18,10 +18,44 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(os.path.dirname(BASE_DIR))
-DB_PATH = os.path.join(PROJECT_DIR, "data", "leads.db")
+DB_PATH = os.getenv("DB_PATH", os.path.join(BASE_DIR, "data", "leads.db"))
 
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+
+def init_db() -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT NOT NULL,
+                mime_type TEXT NOT NULL,
+                data BLOB NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS leads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                username TEXT,
+                full_name TEXT,
+                category TEXT,
+                product_info TEXT,
+                budget TEXT,
+                timeline TEXT,
+                lead_score TEXT,
+                status TEXT DEFAULT '🆕 Новая',
+                admin_comment TEXT DEFAULT '',
+                next_contact TEXT,
+                deal_amount INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+
+init_db()
 
 
 @contextmanager

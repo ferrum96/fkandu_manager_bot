@@ -65,10 +65,33 @@ npm run dev
 docker-compose up -d --build
 ```
 
-Сервисы:
-- `fkandu-bot` — бот + файловый сервер → порт 3001 (внешний) / 8088 (контейнер)
-- `fkandu-api` — FastAPI → порт 3002 / 8000
-- `fkandu-dashboard` — Next.js → порт 3003 / 3000
+Сервисы (порты на хосте):
+- `fkandu-nginx` — reverse proxy → **http://IP** (порт 80)
+- `fkandu-frontend` — дашборд → `127.0.0.1:8000` (через nginx)
+- `fkandu-backend` — API → `127.0.0.1:8001` (через nginx `/api/`)
+- `fkandu-bot` — бот + файловый сервер → порт 8088 (через nginx `/files/`)
+
+Снаружи открывайте только порт **80** в firewall хостера:
+
+```bash
+# Проверка с Mac
+curl -I http://2.26.249.118
+curl http://2.26.249.118/api/stats
+```
+
+Запуск nginx:
+
+```bash
+cd fkandu_manager_bot
+docker compose up -d nginx
+```
+
+Если порт 80 занят:
+
+```bash
+ss -tlnp | grep :80
+systemctl stop nginx   # если системный nginx мешает
+```
 
 ## Переменные окружения
 

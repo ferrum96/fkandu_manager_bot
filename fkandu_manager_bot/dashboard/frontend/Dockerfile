@@ -8,6 +8,8 @@ RUN npm ci
 
 FROM base AS builder
 WORKDIR /app
+ARG API_INTERNAL_URL=http://127.0.0.1:8001
+ENV API_INTERNAL_URL=$API_INTERNAL_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
